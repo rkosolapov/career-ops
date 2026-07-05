@@ -10,6 +10,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { discoverPlugins, pluginRoots, pluginStatus } from './plugins/_engine.mjs';
+import { launchBrowser } from './browser-launcher.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -69,14 +70,9 @@ async function checkPlaywright() {
   // present but no binary — just ABOUT + LICENSE files).
   let browser;
   try {
-    if (process.env.BROWSER_WS_ENDPOINT) {
-      const endpoint = process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome`;
-      browser = await chromium.connectOverCDP({ endpointURL: endpoint });
-      return { pass: true, label: `Playwright connected to sidecar (${endpoint})` };
-    } else {
-      browser = await chromium.launch({ headless: true });
-      return { pass: true, label: 'Playwright chromium installed' };
-    }
+    browser = await launchBrowser({ headless: true });
+    const label = process.env.BROWSER_WS_ENDPOINT ? 'Playwright connected to sidecar' : 'Playwright chromium installed';
+    return { pass: true, label };
   } catch (err) {
     return {
       pass: false,

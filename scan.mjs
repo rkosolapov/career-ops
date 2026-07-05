@@ -702,7 +702,9 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
   let newLivenessPage;
   let jitteredDelayMs;
   let sleep;
+  let launchBrowser;
   try {
+    ({ launchBrowser } = await import('./browser-launcher.mjs'));
     ({ chromium } = await import('playwright'));
     ({ checkUrlLiveness, checkUrlLivenessWithFallback, createHeadedPageProvider, newLivenessPage, jitteredDelayMs, sleep } = await import('./liveness-browser.mjs'));
   } catch (err) {
@@ -714,9 +716,7 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
 
   let browser;
   try {
-    browser = process.env.BROWSER_WS_ENDPOINT
-      ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
-      : await chromium.launch({ headless: true });
+    browser = await launchBrowser({ headless: true });
   } catch (err) {
     const hint = process.env.BROWSER_WS_ENDPOINT
       ? `verify sidecar is running at ${process.env.BROWSER_WS_ENDPOINT}`

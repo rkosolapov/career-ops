@@ -317,9 +317,9 @@ async function parallelEach(items, limit, fn) {
 // ── Liveness verification (reuses liveness-browser.mjs) ────────────
 
 async function filterLive(offers) {
-  let chromium, checkUrlLiveness, newLivenessPage;
+  let launchBrowser, checkUrlLiveness, newLivenessPage;
   try {
-    ({ chromium } = await import('playwright'));
+    ({ launchBrowser } = await import('./browser-launcher.mjs'));
     ({ checkUrlLiveness, newLivenessPage } = await import('./liveness-browser.mjs'));
   } catch (err) {
     throw new Error(
@@ -328,9 +328,7 @@ async function filterLive(offers) {
     );
   }
   console.error(`\nVerifying liveness of ${offers.length} match(es) with Playwright (sequential)...`);
-  const browser = process.env.BROWSER_WS_ENDPOINT
-    ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
-    : await chromium.launch({ headless: true });
+  const browser = await launchBrowser({ headless: true });
   const live = [];
   try {
     const page = await newLivenessPage(browser);

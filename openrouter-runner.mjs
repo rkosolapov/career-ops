@@ -361,19 +361,17 @@ function assertSafeRemoteUrl(url) {
 
 async function fetchJobPage(url) {
   assertSafeRemoteUrl(url);
-  let chromium;
+  let launchBrowser;
   try {
-    ({ chromium } = await import('playwright'));
+    ({ launchBrowser } = await import('./browser-launcher.mjs'));
   } catch {
     console.warn('[fetch] Playwright unavailable — falling back to plain fetch.');
   }
 
-  if (chromium) {
+  if (launchBrowser) {
     let browser;
     try {
-      browser = process.env.BROWSER_WS_ENDPOINT
-        ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
-        : await chromium.launch({ headless: true });
+      browser = await launchBrowser({ headless: true });
       const page = await browser.newPage();
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(2000); // wait for SPA render

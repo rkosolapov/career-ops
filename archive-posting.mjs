@@ -16,7 +16,7 @@
  * Reference: local:jds/YYYY-MM-DD_company-slug_role-slug.pdf  (paste into pipeline.md)
  */
 
-import { chromium } from 'playwright';
+import { launchBrowser } from './browser-launcher.mjs';
 import { writeFile, readFile } from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -302,9 +302,7 @@ async function main() {
     }
   } else {
     // Sequential — project convention: never Playwright in parallel
-    const browser = process.env.BROWSER_WS_ENDPOINT
-      ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
-      : await chromium.launch({ headless: true });
+    const browser = await launchBrowser({ headless: true });
     try {
       for (const { url, company, role } of targets) {
         try {
