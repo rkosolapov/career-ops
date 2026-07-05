@@ -328,7 +328,9 @@ async function filterLive(offers) {
     );
   }
   console.error(`\nVerifying liveness of ${offers.length} match(es) with Playwright (sequential)...`);
-  const browser = await chromium.launch({ headless: true });
+  const browser = process.env.BROWSER_WS_ENDPOINT
+    ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+    : await chromium.launch({ headless: true });
   const live = [];
   try {
     const page = await newLivenessPage(browser);

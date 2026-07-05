@@ -302,7 +302,9 @@ async function main() {
     }
   } else {
     // Sequential — project convention: never Playwright in parallel
-    const browser = await chromium.launch({ headless: true });
+    const browser = process.env.BROWSER_WS_ENDPOINT
+      ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+      : await chromium.launch({ headless: true });
     try {
       for (const { url, company, role } of targets) {
         try {

@@ -760,10 +760,15 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
 
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    browser = process.env.BROWSER_WS_ENDPOINT
+      ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+      : await chromium.launch({ headless: true });
   } catch (err) {
+    const hint = process.env.BROWSER_WS_ENDPOINT
+      ? `verify sidecar is running at ${process.env.BROWSER_WS_ENDPOINT}`
+      : 'run "npx playwright install chromium"';
     throw new Error(
-      `--verify could not launch Chromium (run "npx playwright install chromium" or re-run without --verify): ${err.message}`,
+      `--verify could not initialize Playwright (${hint} or re-run without --verify): ${err.message}`,
       { cause: err },
     );
   }

@@ -69,13 +69,19 @@ async function checkPlaywright() {
   // present but no binary — just ABOUT + LICENSE files).
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
-    return { pass: true, label: 'Playwright chromium installed' };
-  } catch {
+    if (process.env.BROWSER_WS_ENDPOINT) {
+      const endpoint = process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome`;
+      browser = await chromium.connectOverCDP({ endpointURL: endpoint });
+      return { pass: true, label: `Playwright connected to sidecar (${endpoint})` };
+    } else {
+      browser = await chromium.launch({ headless: true });
+      return { pass: true, label: 'Playwright chromium installed' };
+    }
+  } catch (err) {
     return {
       pass: false,
-      label: 'Playwright chromium not installed',
-      fix: 'Run: npx playwright install chromium',
+      label: process.env.BROWSER_WS_ENDPOINT ? `Playwright failed to connect to sidecar: ${err.message}` : 'Playwright chromium not installed',
+      fix: process.env.BROWSER_WS_ENDPOINT ? 'Check sidecar container health and BROWSER_WS_ENDPOINT environment variable' : 'Run: npx playwright install chromium',
     };
   } finally {
     try { await browser?.close(); } catch { /* ignore */ }

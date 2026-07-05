@@ -207,7 +207,9 @@ export function createHeadedPageProvider(chromium) {
       if (page) return page;
       if (launchFailed) return null;
       try {
-        browser = await chromium.launch({ headless: false });
+        browser = process.env.BROWSER_WS_ENDPOINT
+          ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+          : await chromium.launch({ headless: false });
         const context = await browser.newContext(LIVENESS_CONTEXT_OPTIONS);
         page = await context.newPage();
         return page;

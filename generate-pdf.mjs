@@ -386,14 +386,21 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const { writeFile, unlink } = await import('fs/promises');
   await writeFile(tmpHtmlPath, html, 'utf-8');
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = process.env.BROWSER_WS_ENDPOINT
+    ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+    : await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
 
-    // Load from file:// so the page origin allows local subresources
-    await page.goto(pathToFileURL(tmpHtmlPath).href, {
-      waitUntil: 'load',
-    });
+    if (process.env.BROWSER_WS_ENDPOINT) {
+      // Content-based rendering avoids file:// origin restrictions on remote browsers
+      await page.setContent(html, { waitUntil: 'load' });
+    } else {
+      // Load from file:// so the page origin allows local subresources
+      await page.goto(pathToFileURL(tmpHtmlPath).href, {
+        waitUntil: 'load',
+      });
+    }
 
     // Wait for fonts and images to settle
     await page.evaluate(() => document.fonts.ready);

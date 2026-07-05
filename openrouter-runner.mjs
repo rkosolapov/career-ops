@@ -371,7 +371,9 @@ async function fetchJobPage(url) {
   if (chromium) {
     let browser;
     try {
-      browser = await chromium.launch({ headless: true });
+      browser = process.env.BROWSER_WS_ENDPOINT
+        ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+        : await chromium.launch({ headless: true });
       const page = await browser.newPage();
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(2000); // wait for SPA render

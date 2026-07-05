@@ -65,7 +65,9 @@ async function main() {
   let browser = null, page = null, headed = null;
   async function ensureBrowser() {
     if (browser) return;
-    browser = await chromium.launch({ headless: true });
+    browser = process.env.BROWSER_WS_ENDPOINT
+      ? await chromium.connectOverCDP({ endpointURL: process.env.BROWSER_WS_ENDPOINT.endsWith('/chrome') ? process.env.BROWSER_WS_ENDPOINT : `${process.env.BROWSER_WS_ENDPOINT}/chrome` })
+      : await chromium.launch({ headless: true });
     page = await newLivenessPage(browser);
     headed = noFallback ? null : createHeadedPageProvider(chromium);
   }
