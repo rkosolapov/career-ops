@@ -6,7 +6,6 @@
  */
 
 import { classifyLiveness } from './liveness-core.mjs';
-import { launchBrowser } from './browser-launcher.mjs';
 
 const NAVIGATE_TIMEOUT_MS = 15_000;
 const HYDRATION_WAIT_MS = 2_000;
@@ -174,7 +173,7 @@ export async function checkUrlLiveness(page, url, { extraSettleMs = 0 } = {}) {
         .filter(Boolean);
     });
 
-    return classifyLiveness({ status, finalUrl, bodyText, applyControls });
+    return classifyLiveness({ status, requestedUrl: url, finalUrl, bodyText, applyControls });
   } catch (err) {
     // Transient failures (timeout, DNS, TLS, 5xx) shouldn't be treated as expired —
     // doing so would cause scan --verify to drop the URL and write it to scan-history,
@@ -208,7 +207,7 @@ export function createHeadedPageProvider(chromium) {
       if (page) return page;
       if (launchFailed) return null;
       try {
-        browser = await launchBrowser({ headless: false });
+        browser = await chromium.launch({ headless: false });
         const context = await browser.newContext(LIVENESS_CONTEXT_OPTIONS);
         page = await context.newPage();
         return page;

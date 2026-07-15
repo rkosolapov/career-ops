@@ -16,7 +16,6 @@
  */
 
 import { chromium } from 'playwright';
-import { launchBrowser } from './browser-launcher.mjs';
 import { readFile } from 'fs/promises';
 import {
   checkUrlLivenessWithFallback,
@@ -66,7 +65,7 @@ async function main() {
   let browser = null, page = null, headed = null;
   async function ensureBrowser() {
     if (browser) return;
-    browser = await launchBrowser({ headless: true });
+    browser = await chromium.launch({ headless: true });
     page = await newLivenessPage(browser);
     headed = noFallback ? null : createHeadedPageProvider(chromium);
   }

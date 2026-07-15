@@ -16,7 +16,7 @@
  * Reference: local:jds/YYYY-MM-DD_company-slug_role-slug.pdf  (paste into pipeline.md)
  */
 
-import { launchBrowser } from './browser-launcher.mjs';
+import { chromium } from 'playwright';
 import { writeFile, readFile } from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -157,7 +157,7 @@ function extractCompanyFromUrl(url) {
     const { hostname, pathname } = new URL(url);
     const parts = pathname.split('/').filter(Boolean);
     if (hostname === 'boards.greenhouse.io') return parts[0] || null;
-    if (hostname === 'jobs.lever.co') return parts[0] || null;
+    if (/^jobs\.(eu\.)?lever\.co$/.test(hostname)) return parts[0] || null;
     if (hostname === 'jobs.ashbyhq.com') return parts[0] || null;
     if (hostname === 'app.dover.io') return parts[0] || null;
     return null;
@@ -302,7 +302,9 @@ async function main() {
     }
   } else {
     // Sequential — project convention: never Playwright in parallel
-    const browser = await launchBrowser({ headless: true });
+    const browser = process.env.BROWSER_WS_ENDPOINT
+  ? await chromium.connect({ wsEndpoint: process.env.BROWSER_WS_ENDPOINT })
+  : await chromium.launch({ headless: true });
     try {
       for (const { url, company, role } of targets) {
         try {

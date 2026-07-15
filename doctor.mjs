@@ -10,7 +10,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { discoverPlugins, pluginRoots, pluginStatus } from './plugins/_engine.mjs';
-import { launchBrowser } from './browser-launcher.mjs';
+import { resolveExtractorMode } from './browser-extract.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -70,9 +70,13 @@ async function checkPlaywright() {
   // present but no binary — just ABOUT + LICENSE files).
   let browser;
   try {
-    browser = await launchBrowser({ headless: true });
-    const label = process.env.BROWSER_WS_ENDPOINT ? 'Playwright connected to sidecar' : 'Playwright chromium installed';
-    return { pass: true, label };
+    if (process.env.BROWSER_WS_ENDPOINT) {
+      browser = await chromium.connect({ wsEndpoint: process.env.BROWSER_WS_ENDPOINT });
+      return { pass: true, label: `Playwright connected to sidecar (${process.env.BROWSER_WS_ENDPOINT})` };
+    } else {
+      browser = await chromium.launch({ headless: true });
+      return { pass: true, label: 'Playwright chromium installed' };
+    }
   } catch (err) {
     return {
       pass: false,
@@ -109,6 +113,25 @@ function playwrightMcpConfigured(root) {
     }
   }
   return false;
+}
+
+// Report which scan/JD extractor is active (config/profile.yml → scan.extractor).
+// `mcp` (default) uses the browser MCP; `cli` uses browser-extract.mjs. When cli
+// is selected but the helper is missing, the modes fall back to MCP — surface
+// that as a warning, never a failure.
+function checkScanExtractor(root) {
+  const mode = resolveExtractorMode(join(root, 'config', 'profile.yml'));
+  if (mode === 'cli') {
+    if (existsSync(join(root, 'browser-extract.mjs'))) {
+      return { pass: true, label: 'Scan extractor: cli (browser-extract.mjs)' };
+    }
+    return {
+      warn: true,
+      label: 'Scan extractor: cli set, but browser-extract.mjs is missing — falls back to MCP',
+      fix: ['Restore browser-extract.mjs, or set `scan.extractor: mcp` in config/profile.yml.'],
+    };
+  }
+  return { pass: true, label: 'Scan extractor: mcp (default)' };
 }
 
 function checkPlaywrightMcp(root) {
@@ -312,6 +335,7 @@ async function main() {
     checkDependencies(),
     await checkPlaywright(),
     checkPlaywrightMcp(projectRoot),
+    checkScanExtractor(projectRoot),
     ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),
@@ -357,6 +381,7 @@ async function main() {
     console.log(`Result: All checks passed${warnNote}. You're ready to go! Run \`claude\` (or \`opencode\`) to start.`);
     console.log('');
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
+    console.log('Read the manifesto: `npm run manifesto` — a new way of job searching is taking shape, and you are now part of it.');
     process.exit(0);
   }
 }
