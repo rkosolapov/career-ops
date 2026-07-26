@@ -325,10 +325,14 @@
   }
 
   /* === SKILLS === */
+  /* Column stack, not flex-wrap row: with short categories (e.g. "Tools")
+     flex-wrap let two categories share one visual line, reading as if they
+     were a single run-on skill ("...Jupyter Tools:..."). One category per
+     line matches cv.md's own layout. */
   .skills-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 14px;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .skill-item {
@@ -480,13 +484,26 @@
     <div class="summary-text">{{SUMMARY_TEXT}}</div>
   </div>
 
+  <!-- SKILLS (moved up, ahead of Competencies -- #2 audit finding, HostPapa CV:
+       a categorized skills list reads better near the top, matching cv.md's own
+       layout, than after Education. Kept optional via the marker below so a
+       payload using flat Competencies tags instead is unaffected. -->
+  <!-- SECTION:SKILLS:START -->
+  <div class="section">
+    <div class="section-title">{{SECTION_SKILLS}}</div>
+    {{SKILLS}}
+  </div>
+  <!-- SECTION:SKILLS:END -->
+
   <!-- CORE COMPETENCIES -->
+  <!-- SECTION:COMPETENCIES:START -->
   <div class="section">
     <div class="section-title">{{SECTION_COMPETENCIES}}</div>
     <div class="competencies-grid">
       {{COMPETENCIES}}
     </div>
   </div>
+  <!-- SECTION:COMPETENCIES:END -->
 
   <!-- WORK EXPERIENCE -->
   <div class="section">
@@ -495,28 +512,28 @@
   </div>
 
   <!-- PROJECTS -->
+  <!-- SECTION:PROJECTS:START -->
   <div class="section">
     <div class="section-title">{{SECTION_PROJECTS}}</div>
     {{PROJECTS}}
   </div>
+  <!-- SECTION:PROJECTS:END -->
 
   <!-- EDUCATION -->
+  <!-- SECTION:EDUCATION:START -->
   <div class="section">
     <div class="section-title">{{SECTION_EDUCATION}}</div>
     {{EDUCATION}}
   </div>
+  <!-- SECTION:EDUCATION:END -->
 
   <!-- CERTIFICATIONS -->
+  <!-- SECTION:CERTIFICATIONS:START -->
   <div class="section">
     <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
     <div class="cert-table">{{CERTIFICATIONS}}</div>
   </div>
-
-  <!-- SKILLS -->
-  <div class="section">
-    <div class="section-title">{{SECTION_SKILLS}}</div>
-    {{SKILLS}}
-  </div>
+  <!-- SECTION:CERTIFICATIONS:END -->
 
 </div>
 </body>

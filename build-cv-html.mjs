@@ -240,6 +240,31 @@ function renderReport(payload) {
   return { substitutions, candidate };
 }
 
+// Optional sections whose entire block (heading included) must disappear when
+// the payload supplies no entries -- the template renders {{SECTION_X}} labels
+// unconditionally, so an empty PROJECTS/CERTIFICATIONS array otherwise produced
+// a visible heading with nothing under it (#1 audit finding, HostPapa CV).
+// Each is wrapped in `<!-- SECTION:KEY:START/END -->` markers in the template;
+// this strips the marked block when its body substitution came out empty.
+const OPTIONAL_SECTIONS = [
+  { key: 'COMPETENCIES', bodyKey: 'COMPETENCIES' },
+  { key: 'PROJECTS', bodyKey: 'PROJECTS' },
+  { key: 'CERTIFICATIONS', bodyKey: 'CERTIFICATIONS' },
+  { key: 'SKILLS', bodyKey: 'SKILLS' },
+];
+
+function stripEmptyOptionalSections(html, substitutions) {
+  for (const { key, bodyKey } of OPTIONAL_SECTIONS) {
+    if (substitutions[bodyKey]) continue; // has content, keep the section
+    const re = new RegExp(
+      `[ \\t]*<!-- SECTION:${key}:START -->[\\s\\S]*?<!-- SECTION:${key}:END -->\\n?`,
+      'g'
+    );
+    html = html.replace(re, '');
+  }
+  return html;
+}
+
 // Merge a payload into the template and return the final HTML (throws on any
 // unresolved {{PLACEHOLDER}} so a malformed payload fails loudly, not silently).
 function renderHtml(template, payload) {
@@ -253,6 +278,8 @@ function renderHtml(template, payload) {
   for (const [key, value] of Object.entries(substitutions)) {
     html = html.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), () => value);
   }
+
+  html = stripEmptyOptionalSections(html, substitutions);
 
   const unresolved = html.match(PLACEHOLDER_RE);
   if (unresolved) {

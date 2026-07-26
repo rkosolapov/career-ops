@@ -63,11 +63,10 @@
 
 1. Header (large name, gradient, contact, portfolio link)
 2. Professional Summary (3-4 lines, keyword-dense)
-3. Core Competencies (6-8 keyword phrases in flex-grid)
-4. Work Experience (reverse chronological)
-5. Projects (top 3-4 most relevant)
-6. Education & Certifications
-7. Skills (languages + technical)
+3. Core Competencies & Skills (merged, `cv.md`-style category groups via `skills[]` -- see `modes/_custom.md`'s House Rules; the legacy flat `competencies[]` pill-tag section still exists in the template but stays empty/hidden unless there's a specific reason to use it)
+4. Work Experience (reverse chronological, one entry per formal title -- never split a continuous title into per-product entries; see `modes/_custom.md`)
+5. Projects (top 3-4 most relevant; omit the field entirely, don't leave it empty, if there's nothing worth including -- the template auto-hides sections with no entries, #1 audit finding)
+6. Education & Certifications (omit `certifications` from the payload if there are none)
 
 ## Keyword injection strategy (ethical, truth-based)
 
@@ -165,12 +164,12 @@ Write a JSON file with this structure, then run `node build-cv-html.mjs <input.j
 | `candidate.photo` | string | Opt-in profile photo (#264): a local path or `data:` URL. Empty/absent emits **no `<img>`**, rendering pixel-for-pixel identical to the photoless layout (US/UK/many-market ATS penalize photos; opt in for DACH/European markets). |
 | `sections` | object | Optional localized section titles; any omitted key falls back to the English default shown above. |
 | `summary` | string | Personalized summary with keywords. |
-| `competencies` | string[] | 6-8 keyword phrases → competency tags. |
-| `experience[]` | object | `company`, `role`, `location` (optional), `dates`, `bullets` (reordered, keyword-injected). |
-| `projects[]` | object | `name`, `badge` (optional), `tech` (optional), `description` (a `bullets` array is also accepted and joined into the description line). |
+| `competencies` | string[] | Legacy flat pill-tag section. 6-8 keyword phrases → competency tags, rendered above `skills[]`. Check `modes/_custom.md` for a per-user preference before populating both -- default is to leave this empty and use `skills[]` alone (merged "Core Competencies & Skills"). |
+| `experience[]` | object | `company`, `role`, `location` (optional), `dates`, `bullets` (reordered, keyword-injected). One entry per formal title, never per concurrent product -- see `modes/_custom.md`. |
+| `projects[]` | object | `name`, `badge` (optional), `tech` (optional), `description` (a `bullets` array is also accepted and joined into the description line). Omit the field (don't leave `[]`) if there's genuinely nothing to include -- the template auto-hides an empty section, but only skip populating one you actually have nothing for. |
 | `education[]` | object | `title` (degree), `org` (institution), `year`, `description` (optional). |
-| `certifications[]` | object | `title`, `org`, `year`. |
-| `skills[]` | object | `category` + `items` (comma-separated string or string array). |
+| `certifications[]` | object | `title`, `org`, `year`. Omit if none -- see `projects[]` note above. |
+| `skills[]` | object | `category` + `items` (comma-separated string or string array). Primary keyword-grid mechanism by default (see `competencies` note above); category groups render one per line, `cv.md`-style. |
 
 `build-cv-html.mjs` errors out (non-zero exit) if any template placeholder is left unresolved, so a malformed payload fails loudly instead of shipping a broken CV. Run `node build-cv-html.mjs --test` for a self-test render.
 
